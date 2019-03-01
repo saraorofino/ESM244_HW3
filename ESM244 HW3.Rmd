@@ -23,6 +23,7 @@ library(ggrepel)
 library(ggspatial)
 library(RColorBrewer)
 library(raster)
+library(effsize)
 ```
 
 ##Task 1 
@@ -167,17 +168,42 @@ lizard <- read_csv("lizard_clean.csv") %>%
   filter(site == "CALI") %>% 
   filter(sex == "M" | sex == "F")
 
+# Make weights numeric 
+lizard$weight <- as.numeric(lizard$weight)
+
 # Visualize distributions with histograms 
 lizard_male <- lizard %>%
   filter(sex == "M") 
 
 ggplot(lizard_male, aes(x=weight)) +
-  geom_histogram(stat = "count")
+  geom_histogram()
 
 lizard_female <- lizard %>%
   filter(sex == "F") 
 
 ggplot(lizard_female, aes(x=weight)) +
-  geom_histogram(stat = "count")
+  geom_histogram()
+
+# Both are skewed but sample sizes are over 30 so CLT says means will be evenly distributed 
+
+########## Hypothesis Testing ###############
+# Run F-test for equal variances
+# HO: Variances are equal (ratio of variances = 1)
+# HA: Variances are not equal (ratio of variances ≠ 1)
+lizard_ftest <- var.test(weight ~ sex, data = lizard)
+
+# Results - retain the null (p-value = 0.2938) variances are equal 
+
+# Run an upaired t-test to determine if weights are significantly different between males and females: 
+# H0: Mean weights are equal    
+# HA: Mean weights are not equal  
+lizard_ttest <- t.test(weight ~ sex, data = lizard, var.equal = TRUE)
+
+# Results - Mean weights are not significantly different t(130) = 0.79647; p-value = 0.4272 
+
+
 ```
+
+b. For lizards trapped at the ‘CALI’ site, is there a significant difference in the proportion of
+adult male and female lizards with broken tails?  
 
