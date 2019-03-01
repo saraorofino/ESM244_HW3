@@ -5,21 +5,117 @@ date: "2/28/2019"
 output: 
   html_document:
   css: custom.css
-  toc: yes
+  toc: true
 ---
+#{.tabset}
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, message = FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(lubridate)
+library(tseries)
+library(forecast)
 ```
 
-###Task 1 
+##Task 1 
 
 Text
 
-###Task 2
+##Task 2
+
+###Truckee River Flows
+
+a. Create timeseries data and visualize decomposed data:  
+
+```{r, message=FALSE}
+
+truckee <- read_csv("truckee_flow.csv")
+
+# Convert to ts data
+truckee_ts <- ts(truckee$mean_flow, frequency = 12, start = c(2000,1))
+
+#Visualize it:
+#plot(truckee_ts)
+
+# Decompose ts data:
+truckee_dc <- decompose(truckee_ts)
+
+#Visualize it:
+plot(truckee_dc)
+
+
+```
+
+Explain Timeseries:  
+
+b. Holt-Winters and ARIMA for forecasting:  
+
+```{r}
+
+########### Holt-winters:
+
+truckee_hw <- HoltWinters(truckee_ts)
+#plot(truckee_hw)
+
+# Forecast:
+truckee_forecast_hw <- forecast(truckee_hw, h = 60)
+#plot(truckee_forecast_hw)
+
+
+########### ARIMA:
+
+# Find pdq with auto arima:
+truckee_pdq <- auto.arima(truckee_ts)
+#truckee_pdq
+
+# Non-seasonal (2,1,1)
+# Seasonal (0,0,2)
+
+# Fit ARIMA with pdq inputs:
+truckee_arima <- arima(truckee_ts, order = c(2,1,1), seasonal = list(order = c(0,0,2)))
+
+# Forecast ARIMA:
+truckee_forecast_arima <- forecast(truckee_arima, h = 72)
+#plot(truckee_forecast_arima)
+
+### Graph it:
+
+# Data frame with predictions:
+truckee_df <- data.frame(truckee_forecast_hw)
+
+month_seq <- seq(1,60)
+truckee_df_2 <- data.frame(month_seq, truckee_df)
+
+ggplot(truckee_df_2, aes(month_seq, y = Point.Forecast)) +
+  geom_line() + 
+  scale_x_continuous(expand = c(0,0), limits = c(0, 60.5), breaks = seq(0,60, by = 10)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,225)) +
+  labs(y = "Forecast Truckee River Flows (cfs)", 
+       x = "Months\n(Month 0 = October 2016)") +
+  theme_bw()
+```
+
+c. Model Residuals:    
+
+```{r}
+
+# Residuals for HW model:
+par(mfrow = c(1,2))
+hist(truckee_forecast_hw$residuals) 
+qqnorm(truckee_forecast_hw$residuals)
+
+# Residuals for ARIMA:
+par(mfrow = c(1,2))
+hist(truckee_arima$residuals) 
+qqnorm(truckee_arima$residuals)
+
+
+```
+
+
+
+##Task 3
 text
 
-###Task 3
-text
-
-###Task 4
+##Task 4
