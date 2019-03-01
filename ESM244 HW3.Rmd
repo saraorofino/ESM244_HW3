@@ -16,6 +16,13 @@ library(tidyverse)
 library(lubridate)
 library(tseries)
 library(forecast)
+library(sf)
+library(tmap)
+library(leaflet)
+library(ggrepel)
+library(ggspatial)
+library(RColorBrewer)
+library(raster)
 ```
 
 ##Task 1 
@@ -95,6 +102,7 @@ ggplot(truckee_df_2, aes(month_seq, y = Point.Forecast)) +
        x = "Months\n(Month 0 = October 2016)") +
   theme_bw()
 ```
+**Figure Caption.**  
 
 c. Model Residuals:    
 
@@ -116,6 +124,18 @@ qqnorm(truckee_arima$residuals)
 
 
 ##Task 3
-text
+###Mapping California National Parks  
+
+```{r}
+# Read in CA counties shapefile and set crs to WGS84:
+
+ca_counties <- read_sf(".", layer = "california_county_shape_file")
+st_crs(ca_counties) = 4326 
+
+
+# Read in NPS data and check projections:
+ca_nps <- read_sf(".", layer = "nps_boundary")
+```
+
 
 ##Task 4
