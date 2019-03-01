@@ -85,7 +85,7 @@ truckee_arima <- arima(truckee_ts, order = c(2,1,1), seasonal = list(order = c(0
 
 # Forecast ARIMA:
 truckee_forecast_arima <- forecast(truckee_arima, h = 72)
-#plot(truckee_forecast_arima)
+plot(truckee_forecast_arima)
 
 ### Graph it:
 
@@ -113,11 +113,6 @@ c. Model Residuals:
 par(mfrow = c(1,2))
 hist(truckee_forecast_hw$residuals) 
 qqnorm(truckee_forecast_hw$residuals)
-
-# Residuals for ARIMA:
-par(mfrow = c(1,2))
-hist(truckee_arima$residuals) 
-qqnorm(truckee_arima$residuals)
 
 
 ```
