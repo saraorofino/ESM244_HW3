@@ -145,16 +145,39 @@ color_count <- 9
 my_colors  <- colorRampPalette(brewer.pal(8, "Set2"))(color_count)
 
 # CA National Parks graph:
-ggplot(ca_nps)  +
-  geom_sf(aes(fill= UNIT_NAME), 
-          color = "NA",
-          show.legend = FALSE) +
-  scale_fill_manual(values =  my_colors) +
-  geom_sf(data = ca_counties,
-          fill = "NA",
+ggplot(ca_counties) +
+  geom_sf(fill = "NA",
           color  = "grey30",  
-          size =  0.1)
+          size =  0.1) +
+  geom_sf(data = ca_nps, aes(fill= UNIT_NAME)) 
 ```
 
 
 ##Task 4
+###Lizards in the Northern Chihuahuan Desert 
+
+
+a. For all lizards trapped at site ‘CALI’, do weights of male and female adult lizards differ
+significantly?  
+
+```{r warning=FALSE, message=FALSE}
+
+# Read in data set filter for adult male and female lizards at site 'CALI'
+lizard <- read_csv("lizard_clean.csv") %>% 
+  filter(site == "CALI") %>% 
+  filter(sex == "M" | sex == "F")
+
+# Visualize distributions with histograms 
+lizard_male <- lizard %>%
+  filter(sex == "M") 
+
+ggplot(lizard_male, aes(x=weight)) +
+  geom_histogram(stat = "count")
+
+lizard_female <- lizard %>%
+  filter(sex == "F") 
+
+ggplot(lizard_female, aes(x=weight)) +
+  geom_histogram(stat = "count")
+```
+
