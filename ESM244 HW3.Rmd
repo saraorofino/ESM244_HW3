@@ -133,8 +133,27 @@ ca_counties <- read_sf(".", layer = "california_county_shape_file")
 st_crs(ca_counties) = 4326 
 
 
-# Read in NPS data and check projections:
-ca_nps <- read_sf(".", layer = "nps_boundary")
+# Read in NPS data and set crs to WGS84:
+ca_nps <- read_sf(".", layer = "nps_boundary") %>% 
+  filter(STATE == "CA", UNIT_TYPE == "National Park") %>% 
+  st_simplify(dTolerance = 100)
+st_crs(ca_nps) = 4326
+
+
+#Colors for map:
+color_count <- 9
+my_colors  <- colorRampPalette(brewer.pal(8, "Set2"))(color_count)
+
+# CA National Parks graph:
+ggplot(ca_nps)  +
+  geom_sf(aes(fill= UNIT_NAME), 
+          color = "NA",
+          show.legend = FALSE) +
+  scale_fill_manual(values =  my_colors) +
+  geom_sf(data = ca_counties,
+          fill = "NA",
+          color  = "grey30",  
+          size =  0.1)
 ```
 
 
