@@ -24,6 +24,7 @@ library(ggspatial)
 library(RColorBrewer)
 library(raster)
 library(effsize)
+library(naniar)
 ```
 
 ##Task 1 
@@ -85,25 +86,14 @@ truckee_arima <- arima(truckee_ts, order = c(2,1,1), seasonal = list(order = c(0
 
 # Forecast ARIMA:
 truckee_forecast_arima <- forecast(truckee_arima, h = 72)
-plot(truckee_forecast_arima)
+#plot(truckee_forecast_arima)
 
-### Graph it:
-
-# Data frame with predictions:
-truckee_df <- data.frame(truckee_forecast_hw)
-
-month_seq <- seq(1,60)
-truckee_df_2 <- data.frame(month_seq, truckee_df)
-
-ggplot(truckee_df_2, aes(month_seq, y = Point.Forecast)) +
-  geom_line() + 
-  scale_x_continuous(expand = c(0,0), limits = c(0, 60.5), breaks = seq(0,60, by = 10)) +
-  scale_y_continuous(expand = c(0,0), limits = c(0,225)) +
-  labs(y = "Forecast Truckee River Flows (cfs)", 
-       x = "Months\n(Month 0 = October 2016)") +
-  theme_bw()
+# Graph of HW: 
+plot(truckee_forecast_hw,
+     ylab= "Truckee River Flows (cubic feet per second)", 
+     xlab = "Months\n(Month 0 = October 2016)") 
 ```
-**Figure Caption.**  
+
 
 c. Model Residuals:    
 
@@ -132,13 +122,9 @@ st_crs(ca_counties) = 4326
 # Read in NPS data and set crs to WGS84:
 ca_nps <- read_sf(".", layer = "nps_boundary") %>% 
   filter(STATE == "CA", UNIT_TYPE == "National Park") %>% 
-  st_simplify(dTolerance = 100)
+  dplyr::select(UNIT_NAME)
 st_crs(ca_nps) = 4326
 
-
-#Colors for map:
-color_count <- 9
-my_colors  <- colorRampPalette(brewer.pal(8, "Set2"))(color_count)
 
 # CA National Parks graph:
 ggplot(ca_counties) +
@@ -158,26 +144,31 @@ significantly?
 
 ```{r warning=FALSE, message=FALSE}
 
-# Read in data set filter for adult male and female lizards at site 'CALI'
+# Read in data set filter for adult male and female lizards at site 'CALI' (use for both tests)
 lizard <- read_csv("lizard_clean.csv") %>% 
   filter(site == "CALI") %>% 
-  filter(sex == "M" | sex == "F")
+  filter(sex == "M" | sex == "F") %>% 
+  replace_with_na_all(condition = ~.x == ".")
 
 # Make weights numeric 
 lizard$weight <- as.numeric(lizard$weight)
 
-# Visualize distributions with histograms 
-lizard_male <- lizard %>%
-  filter(sex == "M") 
+# Subset data for just male only and female only to visualize distributions 
 
-ggplot(lizard_male, aes(x=weight)) +
-  geom_histogram()
+lizard_male <- lizard %>%
+  filter(sex == "M", weight != "NA") 
 
 lizard_female <- lizard %>%
-  filter(sex == "F") 
+  filter(sex == "F", weight != "NA") 
 
-ggplot(lizard_female, aes(x=weight)) +
-  geom_histogram()
+
+# Visualize distributions with histograms  
+
+#ggplot(lizard_male, aes(x=weight)) +
+  #geom_histogram()
+
+#ggplot(lizard_female, aes(x=weight)) +
+  #geom_histogram()
 
 # Both are skewed but sample sizes are over 30 so CLT says means will be evenly distributed 
 
@@ -196,9 +187,54 @@ lizard_ttest <- t.test(weight ~ sex, data = lizard, var.equal = TRUE)
 
 # Results - Mean weights are not significantly different t(130) = 0.79647; p-value = 0.4272 
 
+# Actual mean weights 
+male_mean <- mean(lizard_male$weight) # 4.965
+male_sd <- sd(lizard_male$weight) #5.679
+female_mean <- mean(lizard_female$weight) # 5.826
+female_sd <- sd(lizard_female$weight) #6.496
+
+# Difference in mean weights:
+mean_diff <- female_mean - male_mean
+#0.862
+
+#Effect size Cohen's D:
+lizard_eff <- cohen.d(weight ~ sex, data = lizard)
+```
+
+Mean adult male lizard body mass (4.97 g ± 5.68 g, n = 57) and female lizard body mass (5.83 g ± 6.50 g, n = 75) did not differ significantly [t(`r lizard_ttest$parameter`) = `r round(lizard_ttest$statistic, 2)`, *p* = `r round(lizard_ttest$p.value, 3)`, $\alpha$ = 0.05]. The actual difference in mean weight between female and male lizards is 0.862 grams with a negligible effect size (Cohen's D = -0.14). 
+
+b. For lizards trapped at the ‘CALI’ site, is there a significant difference in the proportion of
+adult male and female lizards with broken tails?    
+
+```{r, warning=FALSE, message=FALSE}
+
+# Chi square to test for differences in proportions 
+#H0 - there is no difference in proportion of males and females with broken tails
+#HA - there IS a difference in proportion of males and females with broken tails 
+
+lizard_chi <- lizard %>% 
+  dplyr::select(sex, tail) %>% 
+  filter(tail != "NA") %>% 
+  count(sex, tail) %>% 
+  spread(tail, n) %>% 
+  dplyr::select(-sex)
+  
+row.names(lizard_chi) <- c("F", "M")
+
+#Perform chi-square 
+
+lizard_x2test <- chisq.test(lizard_chi) 
+
+# NOT a significant difference in proportions X2(1) = 0.30857, p-value = 0.5786
+
+# Proportions for reporting:
+# Total male - 56
+# Total female - 77
+male_broken <- 10/56 #0.179
+female_broken <- 18/77 #0.234
+
 
 ```
 
-b. For lizards trapped at the ‘CALI’ site, is there a significant difference in the proportion of
-adult male and female lizards with broken tails?  
+There is not a significant difference in the proportion of adult male (0.179) and female (0.234) lizards with broken tails [$x^2$ = (`r lizard_x2test$parameter`) = `r round(lizard_x2test$statistic, 2)`, *p* = `r round(lizard_x2test$p.value, 3)`].  
 
