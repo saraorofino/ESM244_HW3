@@ -22,6 +22,8 @@ library(leaflet)
 library(ggrepel)
 library(ggspatial)
 library(RColorBrewer)
+library(beyonce)
+library(ggthemes)
 library(raster)
 library(effsize)
 library(naniar)
@@ -56,9 +58,11 @@ plot(truckee_dc)
 
 ```
 
-Explain Timeseries:  
+Time Series Description:    
+The time series looks additive and there does not seem to be an overall trend. There is some seasonality to the data but the scale of the seasonality is about 1/6th of the scale of the observed time series so the effect might not be as strong. The does appear to be a larger cycle in approximately 5 year intervals where the data peaks within about a year and then decreases to a minimum of that interval by the end of the 5 year period.   
 
-b. Holt-Winters and ARIMA for forecasting:  
+
+b. Holt-Winters and ARIMA for forecasting:    
 
 ```{r}
 
@@ -91,7 +95,7 @@ truckee_forecast_arima <- forecast(truckee_arima, h = 72)
 # Graph of HW: 
 plot(truckee_forecast_hw,
      ylab= "Truckee River Flows (cubic feet per second)", 
-     xlab = "Months\n(Month 0 = October 2016)") 
+     xlab = "Year") 
 ```
 
 
@@ -122,16 +126,34 @@ st_crs(ca_counties) = 4326
 # Read in NPS data and set crs to WGS84:
 ca_nps <- read_sf(".", layer = "nps_boundary") %>% 
   filter(STATE == "CA", UNIT_TYPE == "National Park") %>% 
-  dplyr::select(UNIT_NAME)
+  dplyr::select(UNIT_NAME, PARKNAME) %>% 
+  mutate(lon=map_dbl(geometry, ~st_centroid(.x)[[1]]), 
+         lat=map_dbl(geometry, ~st_centroid(.x)[[2]]))
+
 st_crs(ca_nps) = 4326
 
+# Change NA value for ParkName to Redwoods
+ca_nps[is.na(ca_nps)]<-"Redwood"
 
 # CA National Parks graph:
 ggplot(ca_counties) +
-  geom_sf(fill = "NA",
-          color  = "grey30",  
+  geom_sf(fill = "cornsilk2",
+          color  = "grey10",  
           size =  0.1) +
-  geom_sf(data = ca_nps, aes(fill= UNIT_NAME)) 
+  geom_sf(data = ca_nps, fill= "darkgreen") +
+  geom_label_repel(data=ca_nps, aes(x=lon, y=lat, label=PARKNAME),
+                  box.padding = 0.80, 
+                  point.padding = 0.5,
+                  alpha = 0.75,
+                  fontface = 'bold', 
+                  color = 'black') +
+  theme_bw() +
+  theme(panel.grid.major = element_line(colour = 'transparent'),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank()) +
+  labs(x = "", y = "",
+       title = "California National Parks")
 ```
 
 
@@ -201,7 +223,7 @@ mean_diff <- female_mean - male_mean
 lizard_eff <- cohen.d(weight ~ sex, data = lizard)
 ```
 
-Mean adult male lizard body mass (4.97 g ± 5.68 g, n = 57) and female lizard body mass (5.83 g ± 6.50 g, n = 75) did not differ significantly [t(`r lizard_ttest$parameter`) = `r round(lizard_ttest$statistic, 2)`, *p* = `r round(lizard_ttest$p.value, 3)`, $\alpha$ = 0.05]. The actual difference in mean weight between female and male lizards is 0.862 grams with a negligible effect size (Cohen's D = -0.14). 
+Mean adult male lizard body mass (4.97 g ± 5.68 g, n = 57) and female lizard body mass (5.83 g ± 6.50 g, n = 75) did not differ significantly [t(`r lizard_ttest$parameter`) = `r round(lizard_ttest$statistic, 2)`, *p* = `r round(lizard_ttest$p.value, 3)`, $\alpha$ = 0.05] and the actual difference in mean weight between female and male lizards is less than one gram with a negligible effect size (Cohen's D = -0.14). 
 
 b. For lizards trapped at the ‘CALI’ site, is there a significant difference in the proportion of
 adult male and female lizards with broken tails?    
@@ -236,5 +258,5 @@ female_broken <- 18/77 #0.234
 
 ```
 
-There is not a significant difference in the proportion of adult male (0.179) and female (0.234) lizards with broken tails [$x^2$ = (`r lizard_x2test$parameter`) = `r round(lizard_x2test$statistic, 2)`, *p* = `r round(lizard_x2test$p.value, 3)`].  
+There is not a significant difference in the proportion of adult male (0.18) and female (0.23) lizards with broken tails [$x^2$ = (`r lizard_x2test$parameter`) = `r round(lizard_x2test$statistic, 2)`, *p* = `r round(lizard_x2test$p.value, 3)`].  
 
