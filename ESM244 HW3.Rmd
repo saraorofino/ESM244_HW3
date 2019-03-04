@@ -142,12 +142,15 @@ st_crs(ca_nps) = 4326
 # Change NA value for ParkName to Redwoods
 ca_nps[is.na(ca_nps)]<-"Redwood"
 
+# Clip off the Nevada part of Death Valley National Park 
+nps_clip <- st_intersection(ca_nps, ca_counties)
+
 # CA National Parks graph:
 ggplot(ca_counties) +
   geom_sf(fill = "cornsilk2",
           color  = "grey10",  
           size =  0.1) +
-  geom_sf(data = ca_nps, fill= "darkgreen") +
+  geom_sf(data = nps_clip, fill= "darkgreen") +
   geom_label_repel(data=ca_nps, aes(x=lon, y=lat, label=PARKNAME),
                   box.padding = 0.80, 
                   point.padding = 0.5,
