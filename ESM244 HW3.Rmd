@@ -1,7 +1,7 @@
 ---
 title: "ESM 244 HW 3"
 author: "Sara Orofino"
-date: "2/28/2019"
+date: "3/5/2019"
 output: 
   html_document:
   css: custom.css
@@ -22,20 +22,20 @@ library(leaflet)
 library(ggrepel)
 library(ggspatial)
 library(RColorBrewer)
-library(beyonce)
 library(ggthemes)
 library(raster)
 library(effsize)
 library(naniar)
+library(latex2exp)
 ```
 
 ##Task 1 
 
-Open science’s most important goals are to make scientific research more transparent and accountable. The open science movement lies on a foundational belief that scientific research across all fields shouldn’t occur in isolation, but rather be conducted as a part of a larger dialogue with society. Studies indicate that open science can have many benefits to researchers including identification and connection to potential collaborators, increased probability of being cited, higher levels of media attention, and additional funding opportunities for open science practices.   
+Open science’s most important goals are to make scientific research more transparent and accountable. The open science movement lies on a foundational belief that scientific research across all fields shouldn’t occur in isolation, but rather be conducted as a part of a larger dialogue with society. Studies indicate that open science can have many benefits to researchers including identification and connection to potential collaborators, increased probability of being cited, higher levels of media attention, and additional funding opportunities.   
 
-Despite the tangible benefits to the scientific community and the general public, attainment of open science goals is hindered by the all or nothing approach. With respect to implementation, the all or nothing approach sacrifices progress in open science for the idea of perfectly open science. Instead of celebrating the progress that is being made, scientists are often criticized for failure to fully implement the ideas of open science. Without recognition of progress and a feeling of support from the open science community, there is little incentive for scientists to continue making the changes required to attain open science goals. These criticisms don’t respect the advancements that scientists have made toward removing barriers to open science and makes the open science community feel more exclusive.    
+Despite the tangible benefits to the scientific community and the general public, attainment of open science goals is hindered by the all or nothing approach. With respect to implementation, the all or nothing approach sacrifices progress towards attaining the goals of open science for the idea of achieving perfectly open science. Instead of celebrating the progress that is being made, scientists are often criticized for failure to fully implement all open science practices. Without recognition of progress and a feeling of support from the open science community, there is little incentive for scientists to continue making the changes required to attain open science goals. These criticisms don’t respect the advancements that scientists have made toward removing barriers to open science and makes the open science community feel more exclusive.    
 
-Open science is further inhibited by its failure to recognize the systematic barriers to accessibility and the inherent inequity of those barriers. The resistance to open data stems from legitimate concerns by those who may be disproportionately impacted by the accessibility barriers but are often disparaged by those who do not share the same concerns. These tend to be scientists who are early in their career, have lower job security, are from developing countries, or working for institutions with less financial resources. A portion of the scientific community may experience an unequal financial and/or social burden to accessing open science. For example, publishing costs can pose a significant barrier to scientists who are from developing countries or those working for institutions with less financial resources. Junior scientists or early career scientists may fear retaliation from senior colleagues when participating in open review. Additionally, there is a persisting perception among the scientific community that open science journals are less prestigious. Younger career scientists may be concerned about how publishing in these types of journals will reflect on the quality of their research and their potential job prospects. Recognizing the validity in these concerns and taking steps to address them in a way that prioritizes equitable access and creates an inclusive community will be necessary to continue transitioning toward open science.     
+Open science is further inhibited by its failure to recognize the systematic barriers to accessibility and the inherent inequity of those barriers. The resistance to open data stems from legitimate concerns by those who may be disproportionately impacted by the accessibility barriers but are often disparaged by those who do not share the same concerns. These tend to be scientists who are early in their career, have lower job security, are from developing countries, or working for institutions with less financial resources. This portion of the scientific community may experience an unequal financial and/or social burden to accessing open science. For example, publishing costs can pose a significant barrier to scientists who are from developing countries or those working for institutions with less financial resources. Junior scientists or early career scientists may fear retaliation from senior colleagues when participating in open review. Additionally, there is a persisting perception among the scientific community that open science journals are less prestigious. Younger career scientists may be concerned about how publishing in these types of journals will reflect on the quality of their research and their potential job prospects. Recognizing the validity in these concerns and taking steps to address them in a way that prioritizes equitable access and creates an inclusive community will be necessary for open science to succeed.     
 
 As I enter the world of data science I am learning to implement practices that will contribute to the goals of open science. To allow for transparency and reproducibility in my research I am using GitHub, the open online version control platform. By creating public repositories for my research I am allowing collaborators, faculty research advisors, and clients to view my data, code, and decision-making process. By annotating my code and documenting the process of my work I am ensuring that it is reproducible as well. One area I could improve on moving forward is organizing my documentation during the initial process of exploring and understanding data. As I’ve been working with two colleagues on a class project, we have all created separate documents for exploring the data and trying different maps and graphs. Having several different documents all containing parts of the code we need has made it difficult to put our project together in a cohesive way that is easy to reproduce and understand. Moving forward, especially into my group project work over the next year, I believe that it will be critical to have a better documentation and organization of even the preliminary and exploratory research that feeds into our analysis and final project outcomes.   
 
@@ -46,14 +46,14 @@ As I enter the world of data science I am learning to implement practices that w
 
 a. Create timeseries data and visualize decomposed data:  
 
-```{r, message=FALSE}
+```{r, message=FALSE, fig.align="center"}
 
 truckee <- read_csv("truckee_flow.csv")
 
 # Convert to ts data
 truckee_ts <- ts(truckee$mean_flow, frequency = 12, start = c(2000,1))
 
-#Visualize it:
+#Visualize initial time series:
 #plot(truckee_ts)
 
 # Decompose ts data:
@@ -65,13 +65,13 @@ plot(truckee_dc)
 
 ```
 
-Time Series Description:    
-The time series looks additive and there does not seem to be an overall trend. There is some seasonality to the data but the scale of the seasonality is about 1/6th of the scale of the observed time series so the effect might not be as strong. The does appear to be a larger cycle in approximately 5 year intervals where the data peaks within about a year and then decreases to a minimum of that interval by the end of the 5 year period.   
+**Time Series Description:**    
+The time series looks additive and there does not seem to be an overall trend. There is some seasonality to the data but the scale of the seasonality is about 1/6th of the scale of the observed time series so the effect might not be as strong as it looks in the seasonality component of the time series graph. There does appear to be a larger cycle in approximately 5 year intervals where the data peaks within about a year and then decreases to a minimum (of that interval) by the end of the 5 year period.   
 
 
 b. Holt-Winters and ARIMA for forecasting:    
 
-```{r}
+```{r, fig.align="center"}
 
 ########### Holt-winters:
 
@@ -101,14 +101,14 @@ truckee_forecast_arima <- forecast(truckee_arima, h = 72)
 
 # Graph of HW: 
 plot(truckee_forecast_hw,
-     ylab= "Truckee River Flows (cubic feet per second)", 
+     ylab= TeX('Truckee River Flows ($ft^{3}/s$)'), 
      xlab = "Year") 
 ```
 
 
 c. Model Residuals:    
 
-```{r}
+```{r, fig.align = "center", warning=FALSE, message=FALSE}
 
 # Residuals for HW model:
 par(mfrow = c(1,2))
@@ -123,7 +123,7 @@ qqnorm(truckee_forecast_hw$residuals)
 ##Task 3
 ###Mapping California National Parks  
 
-```{r}
+```{r, warning=FALSE, message=FALSE, fig.align="center"}
 # Read in CA counties shapefile and set crs to WGS84:
 
 ca_counties <- read_sf(".", layer = "california_county_shape_file")
@@ -231,9 +231,10 @@ mean_diff <- female_mean - male_mean
 
 #Effect size Cohen's D:
 lizard_eff <- cohen.d(weight ~ sex, data = lizard)
+# Negligible Cohens D = -0.14
 ```
 
-Mean adult male lizard body mass (4.97 g ± 5.68 g, n = 57) and female lizard body mass (5.83 g ± 6.50 g, n = 75) did not differ significantly [t(`r lizard_ttest$parameter`) = `r round(lizard_ttest$statistic, 2)`, *p* = `r round(lizard_ttest$p.value, 3)`, $\alpha$ = 0.05] and the actual difference in mean weight between female and male lizards is less than one gram with a negligible effect size (Cohen's D = -0.14). 
+Mean adult female lizard (5.83 g ± 6.50 g, n = 75) and male lizard (4.97 g ± 5.68 g, n = 57) body mass did not differ significantly [t(`r lizard_ttest$parameter`) = `r round(lizard_ttest$statistic, 2)`, *p* = `r round(lizard_ttest$p.value, 3)`, $\alpha$ = 0.05] and the actual difference in mean weight between female and male lizards is less than one gram with a negligible effect size (Cohen's D = -0.14). 
 
 b. For lizards trapped at the ‘CALI’ site, is there a significant difference in the proportion of
 adult male and female lizards with broken tails?    
